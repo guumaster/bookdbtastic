@@ -2,10 +2,11 @@ var faker = require('faker');
 var _ = require('lodash');
 var async = require('async');
 var mongoose = require('mongoose');
-//var coder = require('country-data').lookup;
+var coder = require('country-data').lookup;
 var args = require('yargs').argv;
 
 var TOTAL_BOOKS = args.books || 10;
+var EMPTY_COLLECTION = args.empty !== undefined;
 
 mongoose.connect('mongodb://localhost:27017/books');
 
@@ -19,6 +20,14 @@ var book_count = 0;
 var total = 0;
 
 async.series({
+    empty: function(next) {
+
+        if( !EMPTY_COLLECTION ) {
+            return next();
+        }
+        console.log('Droping documents');
+        Book.remove({}, next);
+    },
     count: function (next) {
         Book.count({}, function (err, initial) {
             console.log('Starting from ', initial);
@@ -38,7 +47,7 @@ async.series({
                     console.log('Inserted: ', book_count);
                 }
                 var country = faker.address.country();
-                //var countryCode = (coder.countries({name: country})[0] || {}).alpha2;
+                var countryCode = (coder.countries({name: country})[0] || {}).alpha2;
                 var book = {
                     //idx: (total+book_count),
                     title: faker.company.catchPhrase(),
@@ -46,8 +55,9 @@ async.series({
                     description: faker.lorem.sentence(),
                     content: faker.lorem.sentences(),
                     country: country,
-                    //countryCode: countryCode,
-                    //rank: (_.random(10,50)/10).toFixed(2),
+                    countryCode: countryCode,
+                    rank: (_.random(10,50)/10).toFixed(2),
+                    price: (_.random(5,500)/10).toFixed(2),
                     tags: _.map(_.range(_.random(0, 10)), faker.hacker.verb),
                     createdAt: faker.date.past()
                 };

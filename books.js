@@ -3,9 +3,45 @@ var mongoosastic=require("mongoosastic");
 
 var bookSchema = new mongoose.Schema({
     title:  { type: String, es_indexed: true},
-    author: String,
+    author: {
+        type: String,
+        es_indexed: true,
+        es_type: 'multi_field',
+        es_fields: {
+            "author": {type:'string' },
+            "raw": {type:'string', index: 'not_analyzed' }
+        }
+    },
     description: { type:String, es_indexed:true },
     content: { type:String, es_indexed:true },
+    country: {
+        type:String,
+        es_indexed:true,
+        es_index: 'not_analyzed'
+    },
+    tags: {
+        type: Array,
+        es_type: 'string',
+        es_indexed: true,
+        es_index: 'not_analyzed',
+        es_index_name: 'tag'
+    },
+    rank: {
+        type: Number,
+        es_indexed: true,
+        es_type: 'float'
+    },
+    price: {
+        type: Number,
+        es_indexed: true,
+        es_type: 'float'
+    },
+    countryCode: {
+        type:String,
+        es_indexed:true,
+        es_index: 'not_analyzed',
+        es_null_value: ''
+    },
     createdAt: {type: Date, es_indexed:true, es_type: 'date'}
 });
 
