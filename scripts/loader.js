@@ -16,6 +16,10 @@ Book.createMapping(function (err, mapping) {
     console.log('mapping created');
 });
 
+var START_TIME = Date.now();
+var LAST_LOOP = 0;
+var START_LOOP = START_TIME;
+
 var book_count = 0;
 var total = 0;
 
@@ -44,7 +48,9 @@ async.series({
             function (callback) {
                 book_count++;
                 if (book_count % 1000 === 0) {
-                    console.log('Inserted: ', book_count);
+                    LAST_LOOP = Date.now() - START_LOOP;
+                    START_LOOP = Date.now();
+                    console.log('Inserted: %d in %dms', book_count, LAST_LOOP);
                 }
                 var country = faker.address.country();
                 var countryCode = (coder.countries({name: country})[0] || {}).alpha2;
@@ -73,7 +79,7 @@ async.series({
                 });
             },
             function (err) {
-                console.log('Total inserted: ', TOTAL_BOOKS);
+                console.log('Total inserted: %d in %dms', TOTAL_BOOKS, Date.now() - START_TIME);
                 next();
             }
         );
