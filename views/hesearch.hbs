@@ -1,4 +1,4 @@
-<form action="/hesearch/" method="post">
+<form action="/hesearch/" method="GET">
 <label for="terms">Search:</label>
 <input type="string" size=80 id="terms" name="terms" value="{{ terms }}"/><br/>
 <INPUT type="submit" value="Search"><br/>
@@ -12,8 +12,7 @@
                 <td>{{_score}}</td>
                 <td>{{title}}</td>
                 <td>{{author}}</td>
-                <td>{{description}}</td>
-                <td>{{content}}</td>
+                <td>{{tags}}</td>
                 <td>
                     <a href="/edit/{{_id}}">Edit</a>
                     <a href="/delete/{{_id}}">Delete</a>

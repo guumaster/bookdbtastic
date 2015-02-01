@@ -39,7 +39,11 @@ app.get('/', function(req, res) {
 });
 
 app.get('/all', function(req, res) {
-  Book.find(function(err, allbooks, count) {
+    var page = req.query.page || 0;
+  Book.find({})
+      .skip(page*100)
+      .limit(100)
+      .exec(function(err, allbooks, count) {
     res.render('all', {
       books: allbooks
     });
@@ -103,34 +107,43 @@ app.get("/delete/:id", function(req, res) {
 });
 
 app.get("/search/", function(req,res) {
-  res.render("search");
-});
-
-app.post("/search/", function(req,res) {
-  var terms=req.body.terms;
-  Book.find({ 'title': new RegExp(terms, 'i') } , function(err,books,count) {
+  var terms=req.query.terms;
+    if( !terms ) {
+        res.render('search');
+        return;
+    }
+  Book.find({
+      $or: [
+          { title: new RegExp(terms, 'i') },
+          { author: new RegExp(terms, 'i') },
+          { description: new RegExp(terms, 'i') },
+          { tags: new RegExp(terms, 'i') }
+          ]
+      }).limit(100).exec( function(err,books,count) {
     res.render("search", { terms:terms, books:books, took: (Date.now()- req.start) })
   });
 });
 
 app.get("/esearch/", function(req,res) {
-  res.render("esearch");
-});
-
-app.post("/esearch/", function(req,res) {
-  var terms=req.body.terms;
-  Book.search({ query:terms }, function(err,results) {
+  var terms=req.query.terms;
+    var from = req.query.page || 0;
+    if( !terms ) {
+        res.render('esearch');
+        return;
+    }
+  Book.search({ query:terms, from: from*100, size:100 }, function(err,results) {
     res.render("esearch", { terms:terms, books:results.hits.hits, took: (Date.now()- req.start) })
   });
 });
 
 app.get("/hesearch/", function(req,res) {
-  res.render("hesearch");
-});
-
-app.post("/hesearch/", function(req,res) {
-  var terms=req.body.terms;
-  Book.search({ query:terms }, { hydrate:true }, function(err,results) {
+  var terms=req.query.terms;
+  var from = req.query.page || 0;
+    if( !terms ) {
+        res.render('hesearch');
+        return;
+    }
+  Book.search({ query:terms, from: from*100, size:100 }, { hydrate:true }, function(err,results) {
     res.render("hesearch", { terms:terms, books:results.hits.hits, took: (Date.now()- req.start) })
   });
 });
