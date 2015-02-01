@@ -1,6 +1,8 @@
 var express = require('express');
 var expressHbs = require('express-handlebars');
 var bodyParser = require('body-parser');
+var mongoose = require("mongoose");
+var Book = require('./books');
 
 var app = express();
 
@@ -15,28 +17,7 @@ app.use(bodyParser.urlencoded({
   limit: '50mb'
 }));
 
-var mongoose = require("mongoose");
-var mongoosastic=require("mongoosastic");
-
-mongoose.connect(process.env.COMPOSE_URL);
-
-var bookSchema = new mongoose.Schema({
-  title: String,
-  author: String,
-  description: { type:String, es_indexed:true },
-  content: { type:String, es_indexed:true }
-});
-
-bookSchema.plugin(mongoosastic,{
-  host:"haproxy2.dblayer.com",
-  port: 10293,
-  protocol: "https",
-  auth: "codepope:esr0b0c0p"
-//  ,curlDebug: true
-});
-
-
-var Book = mongoose.model("Book", bookSchema);
+mongoose.connect('mongodb://localhost:27017/books');
 
 Book.createMapping(function(err, mapping){
   if(err){
@@ -48,6 +29,10 @@ Book.createMapping(function(err, mapping){
   }
 });
 
+app.use(function(req, res, next){
+   req.start = Date.now();
+   next();
+});
 
 app.get('/', function(req, res) {
   res.render('index');
@@ -124,7 +109,7 @@ app.get("/search/", function(req,res) {
 app.post("/search/", function(req,res) {
   var terms=req.body.terms;
   Book.find({ 'title': new RegExp(terms, 'i') } , function(err,books,count) {
-    res.render("search", { terms:terms, books:books })
+    res.render("search", { terms:terms, books:books, took: (Date.now()- req.start) })
   });
 });
 
@@ -135,7 +120,7 @@ app.get("/esearch/", function(req,res) {
 app.post("/esearch/", function(req,res) {
   var terms=req.body.terms;
   Book.search({ query:terms }, function(err,results) {
-    res.render("esearch", { terms:terms, books:results.hits.hits })
+    res.render("esearch", { terms:terms, books:results.hits.hits, took: (Date.now()- req.start) })
   });
 });
 
@@ -146,7 +131,7 @@ app.get("/hesearch/", function(req,res) {
 app.post("/hesearch/", function(req,res) {
   var terms=req.body.terms;
   Book.search({ query:terms }, { hydrate:true }, function(err,results) {
-    res.render("hesearch", { terms:terms, books:results.hits.hits })
+    res.render("hesearch", { terms:terms, books:results.hits.hits, took: (Date.now()- req.start) })
   });
 });
 
