@@ -48,6 +48,9 @@ async.series({
                 }
                 var country = faker.address.country();
                 var countryCode = (coder.countries({name: country})[0] || {}).alpha2;
+                var date = faker.date.past(200);
+                var year = date.getFullYear();
+
                 var book = {
                     //idx: (total+book_count),
                     title: faker.company.catchPhrase(),
@@ -59,7 +62,8 @@ async.series({
                     rank: (_.random(10,50)/10).toFixed(2),
                     price: (_.random(5,500)/10).toFixed(2),
                     tags: _.map(_.range(_.random(0, 10)), faker.hacker.verb),
-                    createdAt: faker.date.past()
+                    createdAt: date,
+                    year: year
                 };
                 var book = Book.create(book, function (err, doc) {
                     doc.on('es-indexed', function (err, res) {

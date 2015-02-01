@@ -42,6 +42,7 @@ var bookSchema = new mongoose.Schema({
         es_index: 'not_analyzed',
         es_null_value: ''
     },
+    year: {type: Number, es_indexed:true},
     createdAt: {type: Date, es_indexed:true, es_type: 'date'}
 });
 
