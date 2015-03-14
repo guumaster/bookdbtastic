@@ -1,52 +1,16 @@
 var mongoose = require("mongoose");
-var async = require('async');
 var yargs = require('yargs').argv;
 
-var Book = require('../books');
-var TRUNCATE= yargs.truncate !== undefined;
+var config = require('../src/config');
+var util = require('../src/util/indexer');
 
-mongoose.connect('mongodb://localhost:27017/books');
+mongoose.connect(config.mongodb.uri);
 
-async.series({
-   mapping: function(next){
-  	 Book.createMapping(function(err, mapping){
-	   if(err) return next(err);
-	   console.log('mapping created!');
-	   next();
-	});
-
-   },
-   truncate: function(next){
-	if( !TRUNCATE) return next();
-
-	Book.esTruncate(function(err){
-	    console.log( 'index truncated');
-	    next();
-	});
- },
-   index: function(next){
-	console.log( 'syncing');
-	var stream = Book.synchronize();
-	var count = 0;
-	 
-	stream.on('data', function(err, doc){
-	  count++;
-	});
-
-	stream.on('close', function(){
-	  console.log('close.indexed ' + count + ' documents!');
-          next();
-
-	});
-	stream.on('error', function(err){
-	  console.log(err);
-	});
-
-   }
-
+util.indexer({
+  truncate: (yargs.truncate !== undefined)
 }, function(err, res){
-    console.log( err, res );
-    mongoose.connection.close();
-    console.log( 'DONE!');
-    process.exit();
+  console.log( err, res );
+  mongoose.connection.close();
+  console.log( 'DONE!');
+  process.exit();
 });
